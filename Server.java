@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class Server extends JFrame{
-	//private ArrayList<Connection> connections;
 	private ClientsManager cm;
 	private ServerSocket server;
 	private JTextArea ta;
@@ -54,7 +53,7 @@ public class Server extends JFrame{
 	}
 
 	private void handleConnection() {
-		// I'm using "--" before to make sure that the human who looks at the server log will understand that no user send that message.
+		// We're using "--" before to make sure that the human who looks at the server log will understand that no user sent that message.
 		ta.append("--ServerMessage: Waiting for connection\n");
 		try {
 			cm.addConnection(server.accept());
