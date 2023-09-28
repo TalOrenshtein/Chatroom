@@ -27,9 +27,14 @@ public class ClientsManager extends Thread {
 		msg=null;
 		loggedout=null;
 	}
-	//uses 2 threads to send the user connected message,to send the message from 1 client to others.
+	/*uses 2 threads to
+	 * 1) announce the connection of a user to all other connections.
+	 * 2) send a message from 1 client to others.
+	*/
+	@Override
 	public void run() {
 		userConnectedHandler=new Thread() {
+			@Override
 			public void run() {
 				while(true) {
 					if(server.getServerSocket().isClosed())
@@ -37,11 +42,11 @@ public class ClientsManager extends Thread {
 					unLock.lock();
 					// announce the connection of un to all other connections
 					if(un!=null) { 
-						server.getJTextArea().append(un+" connected.\n");
+						server.getJTextArea().append(String.format("%s connected.\n",un));
 						for (Connection connection : connections) {
 							if(!connection.equals(lastConnection)) {
 								connection.getOutput().format("Connected\n");
-								connection.getOutput().format(un+"\n");
+								connection.getOutput().format("%s\n",un);
 								connection.getOutput().flush();
 							}
 						}
@@ -54,6 +59,7 @@ public class ClientsManager extends Thread {
 		};
 		userConnectedHandler.start();
 		msgSentHandler=new Thread() {
+			@Override
 			public void run() {
 				while (true) {
 					if(server.getServerSocket().isClosed())
@@ -61,9 +67,9 @@ public class ClientsManager extends Thread {
 					msgLock.lock();
 					// send to message to all connections
 					if(msg!=null) {
-						server.getJTextArea().append(msg+"\n");
+						server.getJTextArea().append(String.format("%s\n",msg));
 						for (Connection connection : connections) {
-								connection.getOutput().format(msg+"\n");
+								connection.getOutput().format("%s\n",msg);
 								connection.getOutput().flush();
 						}
 					}
@@ -81,8 +87,8 @@ public class ClientsManager extends Thread {
 		connections.add(c);
 		c.start();
 	}
-	// returns all the usernames that doesn't belong to c.
-	public String getUsernames() {
+	// returns all the usernames of users that was already connected, or in other words, usernames that doesn't belong to the last connected user.
+	public String getConnectedUsernames() {
 		String st="";
 		for (Connection connection : connections) {
 			if(!connection.equals(lastConnection))
@@ -122,26 +128,28 @@ public class ClientsManager extends Thread {
 			}
 			catch (InterruptedException e) {
 				e.printStackTrace();
+				Thread.currentThread().interrupt();
 			}
 		loggedout=c.getUsername();
 		logoutLock.unlock();
 		connections.remove(c);
 		userLeftHandler=new Thread() {
+			@Override
 			public void run() {
 				if(server.getServerSocket().isClosed())
 					return;
 				logoutLock.lock();
 				 // announce the logout of loggedout to all other connections
 				if(loggedout!=null) {
-					server.getJTextArea().append(loggedout+" left.\n");
+					server.getJTextArea().append(String.format("%s left.\n",loggedout));
 					for (Connection connection : connections) {
 							connection.getOutput().format("Left\n");
-							connection.getOutput().format(loggedout+" left.\n");
+							connection.getOutput().format("%s left.\n",loggedout);
 							connection.getOutput().format("%d\n",connections.size());
 							connection.getOutput().flush();
 							for (Connection connection2 : connections)
 								if(!connection2.equals(connection)) {
-									connection.getOutput().format(connection2.getUsername()+"\n");
+									connection.getOutput().format("%s\n",connection2.getUsername());
 									connection.getOutput().flush();
 								}
 					}
@@ -182,9 +190,8 @@ public class ClientsManager extends Thread {
 				return username;
 			for (int i = 1; i <=a.size(); i++)
 				if(a.indexOf(i)==-1)
-					return "("+i+")"+username;
-				
-			return "("+unDup+")"+username;	
+					return String.format("(%d)%s",i,username);
+			return String.format("(%d)%s",unDup,username);
 		}
 		else
 			return username;
