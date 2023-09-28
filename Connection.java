@@ -36,6 +36,7 @@ public class Connection extends Thread{
 	public String getUsername() {
 		return username;
 	}
+	@Override
 	public void run() {
 		in=input.nextLine(); // getting username from the client
 		if(in.equals("No username entered")) {
@@ -46,21 +47,22 @@ public class Connection extends Thread{
 		cm.unLock.lock();
 		cm.setLastConnection(this);
 		username=cm.UserNameChecker(in);
-		output.format(username+"\n");
+		output.format("%s\n",username);
 		output.format("%d\n",cm.getConnectionSize());
 		if(cm.getConnectionSize()>1)
-			output.format(cm.getUsernames());
+			output.format(cm.getConnectedUsernames());
 		output.flush();
-		while(cm.getUn()!=null) // There's already a username that needs to be announce to all the other connections.
+		while(cm.getUn()!=null) // There's already a username that needs to be announced to all the other connections.
 			try {
 				cm.unCon.await();
 			}
 			catch (InterruptedException e) {
 				e.printStackTrace();
+				Thread.currentThread().interrupt();
 			}
 		cm.setUn(username);
 		cm.unLock.unlock();
-		//you can implement msg-seen if you want.just check in client side if the gui got focused since the msg sent. and u can check who saw with /seen or something.
+		//we can implement msg-seen feature if we want. just check in client side if the gui got focused since the msg sent. and check who focused the gui or something.
 		while (true) {
 			try {
 				if(input.hasNextLine()&&!(in=input.nextLine()).equals("Logout")) {
@@ -71,6 +73,7 @@ public class Connection extends Thread{
 						}
 						catch (InterruptedException e) {
 							e.printStackTrace();
+							Thread.currentThread().interrupt();
 						}
 					cm.setMsg(in);
 					cm.msgLock.unlock();
