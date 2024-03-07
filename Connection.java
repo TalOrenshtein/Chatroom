@@ -45,14 +45,7 @@ public class Connection extends Thread{
 			return;
 		}
 		cm.unLock.lock();
-		cm.setLastConnection(this);
-		username=cm.UserNameChecker(in);
-		output.format("%s\n",username);
-		output.format("%d\n",cm.getConnectionSize());
-		if(cm.getConnectionSize()>1)
-			output.format(cm.getConnectedUsernames());
-		output.flush();
-		while(cm.getUn()!=null) // There's already a username that needs to be announced to all the other connections.
+		while(cm.getUn()!=null) // There's already a user that's in the middle of the connecting process, waiting for our turn.
 			try {
 				cm.unCon.await();
 			}
@@ -60,6 +53,13 @@ public class Connection extends Thread{
 				e.printStackTrace();
 				Thread.currentThread().interrupt();
 			}
+		cm.setLastConnection(this);
+		username=cm.UserNameChecker(in);
+		output.format("%s\n",username);
+		output.format("%d\n",cm.getConnectionSize());
+		if(cm.getConnectionSize()>1)
+			output.format(cm.getConnectedUsernames());
+		output.flush();
 		cm.setUn(username);
 		cm.unLock.unlock();
 		//we can implement msg-seen feature if we want. just check in client side if the gui got focused since the msg sent. and check who focused the gui or something.
@@ -102,8 +102,6 @@ public class Connection extends Thread{
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
 	}
 
 
